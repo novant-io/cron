@@ -14,6 +14,13 @@ abstract const class CronSchedule
 {
 
 //////////////////////////////////////////////////////////////////////////
+// Methods
+//////////////////////////////////////////////////////////////////////////
+
+  ** Return true if this schedule triggers for the given timestamp.
+  abstract Bool trigger(DateTime now, DateTime? last)
+
+//////////////////////////////////////////////////////////////////////////
 // Serializable
 //////////////////////////////////////////////////////////////////////////
 
@@ -58,11 +65,14 @@ abstract const class CronSchedule
 
 internal const class EverySchedule : CronSchedule
 {
-  ** Constructor.
   new make(Duration dur) { this.dur=dur }
 
-  ** Duration to wait b/w job runs.
   const Duration dur
+
+  override Bool trigger(DateTime now, DateTime? last)
+  {
+    last==null ? false : now - last >= dur
+  }
 
   override Int hash() { toStr.hash }
 
@@ -81,11 +91,16 @@ internal const class EverySchedule : CronSchedule
 
 internal const class DailySchedule : CronSchedule
 {
-  ** Constructor.
   new make(Time time) { this.time=time }
 
-  ** Time when job should be run every day.
   const Time time
+
+  override Bool trigger(DateTime now, DateTime? last)
+  {
+    last==null
+      ? now.time >= time
+      : (now.time >= time && (now-last >= 24hr))
+  }
 
   override Int hash() { toStr.hash }
 

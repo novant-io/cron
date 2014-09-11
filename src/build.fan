@@ -19,7 +19,7 @@ class Build : BuildPod
     podName = "cron"
     summary = "Cron Scheduling API"
     version = Version("1.0.0")
-    //meta = ["vcs.uri" : "http://bitbucket.org/afrankvt/cron/", "license.name":"MIT"]
+    meta = ["vcs.uri" : "http://bitbucket.org/afrankvt/cron/", "license.name":"MIT"]
     depends = ["sys 1.0", "util 1.0", "concurrent 1.0"]
     srcDirs = [`fan/`, `test/`]
     docSrc = true

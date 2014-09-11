@@ -11,7 +11,7 @@
 **
 internal class ScheduleTest : Test
 {
-  // very 10sec
+  // every 10sec
   // daily at 10:00:00
   // weekly on sun at 10:00:00
   // montly on xxx at 10:00:00
@@ -24,6 +24,14 @@ internal class ScheduleTest : Test
 
     verifyErr(ParseErr#) { x := CronSchedule.fromStr("every foo") }
     verifyErr(ParseErr#) { x := CronSchedule.fromStr("every 10s") }
+
+    now := DateTime.now
+    x := CronSchedule("every 10min")
+    verifyFalse(x.trigger(now, null))
+    verifyFalse(x.trigger(now, now-1min))
+    verifyFalse(x.trigger(now, now-9min))
+    verify(x.trigger(now, now-10min))
+    verify(x.trigger(now, now-11min))
   }
 
   Void testDaily()
@@ -35,6 +43,16 @@ internal class ScheduleTest : Test
     verifyErr(ParseErr#) { x := CronSchedule.fromStr("daily at 8:15:00") }
     verifyErr(ParseErr#) { x := CronSchedule.fromStr("daily at 08:15")   }
     verifyErr(ParseErr#) { x := CronSchedule.fromStr("daily at foo")     }
+
+    now := DateTime("2014-09-10T22:00:00-04:00 New_York")
+    x := CronSchedule("daily at 16:00:00")
+    verifyFalse(x.trigger(now-8hr, null))
+    verify(x.trigger(now, null))
+    verify(x.trigger(now, now-2day))
+    verify(x.trigger(now, now-25hr))
+    verify(x.trigger(now, now-24hr))
+    verifyFalse(x.trigger(now, now-23hr))
+    verifyFalse(x.trigger(now, now-1hr))
   }
 
   private Void verifySchedule(Str str, CronSchedule s)
