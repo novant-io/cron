@@ -43,15 +43,21 @@ internal class ScheduleTest : Test
     verifyErr(ParseErr#) { x := CronSchedule.fromStr("daily at 8:15") }
     verifyErr(ParseErr#) { x := CronSchedule.fromStr("daily at foo")  }
 
-    now := DateTime("2014-09-10T22:00:00-04:00 New_York")
+    // no last
     x := CronSchedule("daily at 16:00")
-    verifyFalse(x.trigger(now-8hr, null))
-    verify(x.trigger(now, null))
-    verify(x.trigger(now, now-2day))
-    verify(x.trigger(now, now-25hr))
-    verify(x.trigger(now, now-24hr))
-    verifyFalse(x.trigger(now, now-23hr))
-    verifyFalse(x.trigger(now, now-1hr))
+    verifyTrigger(x, "2014-09-10", "09:00", null, null, false)   // before
+    verifyTrigger(x, "2014-09-10", "15:59", null, null, false)   // before
+    verifyTrigger(x, "2014-09-10", "16:00", null, null, true)    // at
+    verifyTrigger(x, "2014-09-10", "18:00", null, null, true)    // after
+
+    // last
+    verifyTrigger(x, "2014-09-10", "09:00", "2014-09-09", "16:00", false)   // before
+    verifyTrigger(x, "2014-09-10", "15:59", "2014-09-09", "16:00", false)   // before
+    verifyTrigger(x, "2014-09-10", "16:00", "2014-09-09", "16:00", true)    // exact
+    verifyTrigger(x, "2014-09-10", "18:00", "2014-09-10", "16:00", false)   // after
+    verifyTrigger(x, "2014-09-11", "09:00", "2014-09-10", "16:00", false)   // next-day before
+    verifyTrigger(x, "2014-09-11", "15:59", "2014-09-10", "16:00", false)   // next-day before
+    verifyTrigger(x, "2014-09-11", "16:01", "2014-09-10", "16:00", true)    // next-day at
   }
 
   Void testWeekly()
@@ -74,7 +80,7 @@ internal class ScheduleTest : Test
     x := CronSchedule("weekly on wed at 14:00")
     verifyTrigger(x, "2015-10-13", "15:00", null, null, false)  // tue
     verifyTrigger(x, "2015-10-14", "13:00", null, null, false)  // wed before
-    verifyTrigger(x, "2015-10-14", "14:00", null, null, true)   // wed exact
+    verifyTrigger(x, "2015-10-14", "14:00", null, null, true)   // wed at
     verifyTrigger(x, "2015-10-14", "15:00", null, null, true)   // wed after
     verifyTrigger(x, "2015-10-15", "09:00", null, null, false)  // thur
     verifyTrigger(x, "2015-10-15", "14:30", null, null, false)  // thur
@@ -83,27 +89,27 @@ internal class ScheduleTest : Test
     // single day - last week
     verifyTrigger(x, "2015-10-13", "15:00", "2015-10-07", "14:01", false)  // tue
     verifyTrigger(x, "2015-10-14", "13:00", "2015-10-07", "14:01", false)  // wed before
-    verifyTrigger(x, "2015-10-14", "14:00", "2015-10-07", "14:01", true)   // wed exact
+    verifyTrigger(x, "2015-10-14", "14:00", "2015-10-07", "14:01", true)   // wed at
     verifyTrigger(x, "2015-10-14", "15:00", "2015-10-07", "14:01", true)   // wed after
 
     // single day - last today
     verifyTrigger(x, "2015-10-13", "15:00", "2015-10-14", "14:01", false)  // tue
     verifyTrigger(x, "2015-10-14", "13:00", "2015-10-14", "14:01", false)  // wed before
-    verifyTrigger(x, "2015-10-14", "14:00", "2015-10-14", "14:01", false)  // wed exact
+    verifyTrigger(x, "2015-10-14", "14:00", "2015-10-14", "14:01", false)  // wed at
     verifyTrigger(x, "2015-10-14", "15:00", "2015-10-14", "14:01", false)  // wed after
 
     // multi-day
     y := CronSchedule("weekly on mon,wed,thu at 14:00")
     verifyTrigger(y, "2015-10-12", "10:00", null,         null,    false)  // mon before
-    verifyTrigger(y, "2015-10-12", "14:00", null,         null,    true)   // mon exact
+    verifyTrigger(y, "2015-10-12", "14:00", null,         null,    true)   // mon at
     verifyTrigger(y, "2015-10-12", "14:00", "2015-10-12", "14:00", false)  // mon after
     verifyTrigger(y, "2015-10-13", "09:00", "2015-10-12", "14:00", false)  // tue
     verifyTrigger(y, "2015-10-13", "18:00", "2015-10-12", "14:00", false)  // tue
     verifyTrigger(y, "2015-10-14", "12:00", "2015-10-12", "14:00", false)  // wed before
-    verifyTrigger(y, "2015-10-14", "14:00", "2015-10-12", "14:00", true)   // wed exact
+    verifyTrigger(y, "2015-10-14", "14:00", "2015-10-12", "14:00", true)   // wed at
     verifyTrigger(y, "2015-10-14", "15:00", "2015-10-14", "14:00", false)  // wed after
     verifyTrigger(y, "2015-10-15", "08:00", "2015-10-14", "14:00", false)  // thu before
-    verifyTrigger(y, "2015-10-15", "14:15", "2015-10-14", "14:00", true)   // thu exact
+    verifyTrigger(y, "2015-10-15", "14:15", "2015-10-14", "14:00", true)   // thu at
     verifyTrigger(y, "2015-10-15", "15:00", "2015-10-15", "14:00", false)  // thu after
   }
 
