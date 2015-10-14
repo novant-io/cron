@@ -31,12 +31,11 @@ abstract const class CronSchedule
       s := str.split(' ')
       switch (s.first)
       {
-        case "every": return parseEvery(s)
-        case "daily": return parseDaily(s)
+        case "every":  return parseEvery(s)
+        case "daily":  return parseDaily(s)
+        case "weekly": return parseWeekly(s)
         default: throw Err()
       }
-
-      return DailySchedule(Time(10,0,0))
     }
     catch (Err err)
     {
@@ -55,7 +54,17 @@ abstract const class CronSchedule
   {
     if (s.size != 3) throw Err()
     if (s[1] != "at") throw Err()
-    return DailySchedule(Time.fromStr(s[2]))
+    return DailySchedule(Time.fromStr(s[2] + ":00"))
+  }
+
+  private static WeeklySchedule parseWeekly(Str[] s)
+  {
+    if (s.size != 5) throw Err()
+    if (s[1] != "on") throw Err()
+    w := Weekday[,]
+    s[2].split(',').each |x| { w.add(Weekday.fromStr(x)) }
+    if (s[3] != "at") throw Err()
+    return WeeklySchedule(w.unique.sort, Time.fromStr(s[4] + ":00"))
   }
 }
 
@@ -110,5 +119,39 @@ internal const class DailySchedule : CronSchedule
     return that?.time == this.time
   }
 
-  override Str toStr() { "daily at $time" }
+  override Str toStr() { "daily at " + time.toLocale("hh:mm") }
+}
+
+**************************************************************************
+** WeeklySchedule
+**************************************************************************
+
+internal const class WeeklySchedule : CronSchedule
+{
+  new make(Weekday[] weekdays, Time time)
+  {
+    this.weekdays = weekdays
+    this.time = time
+  }
+
+  const Weekday[] weekdays
+  const Time time
+
+  override Bool trigger(DateTime now, DateTime? last)
+  {
+    if (!weekdays.contains(now.date.weekday)) return false
+    if (now.time < time) return false
+    return last==null ? true : now.date > last.date
+  }
+
+  override Int hash() { toStr.hash }
+
+  override Bool equals(Obj? obj)
+  {
+    that := obj as WeeklySchedule
+    if (that == null) return false
+    return that.weekdays == this.weekdays && that.time == this.time
+  }
+
+  override Str toStr() { "weekly on " + weekdays.join(",") + " at " + time.toLocale("hh:mm") }
 }

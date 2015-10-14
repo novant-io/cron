@@ -24,6 +24,9 @@ const class CronService : Service
     actor.send(CronMsg("init"))
   }
 
+  ** Directory for job config and logs.
+  const File dir := Env.cur.workDir + `cron/`
+
 //////////////////////////////////////////////////////////////////////////
 // Jobs
 //////////////////////////////////////////////////////////////////////////
@@ -82,7 +85,7 @@ const class CronService : Service
 
   private const Log log := Log.get("cron")
 
-  private const Duration checkFreq := 1min
+  private const Duration checkFreq := 1sec
   private const CronMsg checkMsg := CronMsg("check")
 }
 

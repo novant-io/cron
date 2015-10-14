@@ -11,4 +11,6 @@
 **
 const class CronJob
 {
+  // ** Method to invoke for job.
+  // const Method func
 }
