@@ -31,9 +31,10 @@ abstract const class CronSchedule
       s := str.split(' ')
       switch (s.first)
       {
-        case "every":  return parseEvery(s)
-        case "daily":  return parseDaily(s)
-        case "weekly": return parseWeekly(s)
+        case "every":   return parseEvery(s)
+        case "daily":   return parseDaily(s)
+        case "weekly":  return parseWeekly(s)
+        case "monthly": return parseMonthly(s)
         default: throw Err()
       }
     }
@@ -65,6 +66,21 @@ abstract const class CronSchedule
     s[2].split(',').each |x| { w.add(Weekday.fromStr(x)) }
     if (s[3] != "at") throw Err()
     return WeeklySchedule(w.unique.sort, Time.fromStr(s[4] + ":00"))
+  }
+
+  private static MonthlySchedule parseMonthly(Str[] s)
+  {
+    if (s.size != 5) throw Err()
+    if (s[1] != "on") throw Err()
+    days := Int[,]
+    s[2].split(',').each |x|
+    {
+      d := x.toInt(10, false)
+      if (d == null || d < 1 || d > 31) throw Err()
+      days.add(d)
+    }
+    if (s[3] != "at") throw Err()
+    return MonthlySchedule(days.unique.sort, Time.fromStr(s[4] + ":00"))
   }
 }
 
@@ -154,4 +170,38 @@ internal const class WeeklySchedule : CronSchedule
   }
 
   override Str toStr() { "weekly on " + weekdays.join(",") + " at " + time.toLocale("hh:mm") }
+}
+
+**************************************************************************
+** MonthlySchedule
+**************************************************************************
+
+internal const class MonthlySchedule : CronSchedule
+{
+  new make(Int[] days, Time time)
+  {
+    this.days = days
+    this.time = time
+  }
+
+  const Int[] days
+  const Time time
+
+  override Bool trigger(DateTime now, DateTime? last)
+  {
+    if (!days.contains(now.date.day)) return false
+    if (now.time < time) return false
+    return last==null ? true : now.date > last.date
+  }
+
+  override Int hash() { toStr.hash }
+
+  override Bool equals(Obj? obj)
+  {
+    that := obj as MonthlySchedule
+    if (that == null) return false
+    return that.days == this.days && that.time == this.time
+  }
+
+  override Str toStr() { "monthly on " + days.join(",") + " at " + time.toLocale("hh:mm") }
 }

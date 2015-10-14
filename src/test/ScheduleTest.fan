@@ -14,7 +14,11 @@ internal class ScheduleTest : Test
   // every 10sec
   // daily at 10:00
   // weekly on sun at 10:00
-  // montly on xxx at 10:00
+  // montly on 1,15 at 10:00
+
+//////////////////////////////////////////////////////////////////////////
+// Every
+//////////////////////////////////////////////////////////////////////////
 
   Void testEvery()
   {
@@ -33,6 +37,10 @@ internal class ScheduleTest : Test
     verify(x.trigger(now, now-10min))
     verify(x.trigger(now, now-11min))
   }
+
+//////////////////////////////////////////////////////////////////////////
+// Daily
+//////////////////////////////////////////////////////////////////////////
 
   Void testDaily()
   {
@@ -59,6 +67,10 @@ internal class ScheduleTest : Test
     verifyTrigger(x, "2014-09-11", "15:59", "2014-09-10", "16:00", false)   // next-day before
     verifyTrigger(x, "2014-09-11", "16:01", "2014-09-10", "16:00", true)    // next-day at
   }
+
+//////////////////////////////////////////////////////////////////////////
+// Weekly
+//////////////////////////////////////////////////////////////////////////
 
   Void testWeekly()
   {
@@ -112,6 +124,73 @@ internal class ScheduleTest : Test
     verifyTrigger(y, "2015-10-15", "14:15", "2015-10-14", "14:00", true)   // thu at
     verifyTrigger(y, "2015-10-15", "15:00", "2015-10-15", "14:00", false)  // thu after
   }
+
+//////////////////////////////////////////////////////////////////////////
+// Monthly
+//////////////////////////////////////////////////////////////////////////
+
+  Void testMonthly()
+  {
+    verifySchedule("monthly on 15 at 09:45", MonthlySchedule([15], Time(9,45,0)))
+    verifySchedule("monthly on 1,15 at 09:45", MonthlySchedule([1,15], Time(9,45,0)))
+    verifySchedule("monthly on 5,1,5,1 at 09:45", MonthlySchedule([1,5], Time(9,45,0)), false)
+    verifySchedule("monthly on 31,4,12 at 09:45", MonthlySchedule([4,12,31], Time(9,45,0)), false)
+
+    verifyErr(ParseErr#) { x := CronSchedule.fromStr("monthly 08:15")   }
+    verifyErr(ParseErr#) { x := CronSchedule.fromStr("monthly 15 08:15") }
+    verifyErr(ParseErr#) { x := CronSchedule.fromStr("monthly on 15 08:15")  }
+    verifyErr(ParseErr#) { x := CronSchedule.fromStr("monthly on 15 at 8:15")  }
+    verifyErr(ParseErr#) { x := CronSchedule.fromStr("monthly on 15 at foo")  }
+    verifyErr(ParseErr#) { x := CronSchedule.fromStr("monthly on mon at 12:00")  }
+    verifyErr(ParseErr#) { x := CronSchedule.fromStr("monthly on 1, 15 at 12:00")  }
+
+    // single day - no last
+    x := CronSchedule("monthly on 15 at 10:00")
+    verifyTrigger(x, "2015-10-14", "09:00", null, null, false)  // 10/14
+    verifyTrigger(x, "2015-10-14", "12:00", null, null, false)  // 10/14
+    verifyTrigger(x, "2015-10-15", "09:00", null, null, false)  // 10/15 before
+    verifyTrigger(x, "2015-10-15", "10:00", null, null, true)   // 10/15 at
+    verifyTrigger(x, "2015-10-15", "12:00", null, null, true)   // 10/15 after
+    verifyTrigger(x, "2015-10-16", "09:00", null, null, false)  // 10/16
+    verifyTrigger(x, "2015-10-16", "10:30", null, null, false)  // 10/16
+    verifyTrigger(x, "2015-10-16", "18:00", null, null, false)  // 10/16
+
+    // single day - last month
+    verifyTrigger(x, "2015-10-14", "15:00", "2015-09-15", "10:01", false)  // 10/14
+    verifyTrigger(x, "2015-10-15", "09:00", "2015-09-15", "14:01", false)  // 10/15 before
+    verifyTrigger(x, "2015-10-15", "10:00", "2015-09-15", "14:01", true)   // 10/15 at
+    verifyTrigger(x, "2015-10-15", "15:00", "2015-09-15", "14:01", true)   // 10/15 after
+
+    // single day - last today
+    verifyTrigger(x, "2015-10-14", "10:05", "2015-10-15", "10:01", false)  // 10/14
+    verifyTrigger(x, "2015-10-15", "09:00", "2015-10-15", "10:01", false)  // 10/15 before
+    verifyTrigger(x, "2015-10-15", "10:00", "2015-10-15", "10:01", false)  // 10/15 at
+    verifyTrigger(x, "2015-10-15", "15:00", "2015-10-15", "10:01", false)  // 10/15 after
+
+    // mulit-day
+    z := CronSchedule("monthly on 1,15,16 at 14:00")
+    verifyTrigger(z, "2015-09-30", "10:00", null,         null,    false)  // 9/30
+    verifyTrigger(z, "2015-09-30", "15:00", null,         null,    false)  // 9/30
+    verifyTrigger(z, "2015-10-01", "09:00", null,         null,    false)  // 10/1 before
+    verifyTrigger(z, "2015-10-01", "14:00", null,         null,    true)   // 10/1 at
+    verifyTrigger(z, "2015-10-01", "15:00", "2015-10-01", "14:01", false)  // 10/1 after
+    verifyTrigger(z, "2015-10-02", "09:00", "2015-10-01", "14:01", false)  // 10/2
+    verifyTrigger(z, "2015-10-02", "18:00", "2015-10-01", "14:01", false)  // 10/2
+    verifyTrigger(z, "2015-10-14", "09:00", "2015-10-01", "14:01", false)  // 10/14
+    verifyTrigger(z, "2015-10-14", "18:00", "2015-10-01", "14:01", false)  // 10/14
+    verifyTrigger(z, "2015-10-15", "09:00", "2015-10-01", "14:01", false)  // 10/15 before
+    verifyTrigger(z, "2015-10-15", "14:00", "2015-10-01", "14:01", true)   // 10/15 at
+    verifyTrigger(z, "2015-10-15", "14:00", "2015-10-15", "14:00", false)  // 10/15 after
+    verifyTrigger(z, "2015-10-16", "08:00", "2015-10-15", "14:00", false)  // 10/16 before
+    verifyTrigger(z, "2015-10-16", "14:30", "2015-10-15", "14:00", true)   // 10/16 at
+    verifyTrigger(z, "2015-10-16", "22:00", "2015-10-16", "14:30", false)  // 10/16 after
+    verifyTrigger(z, "2015-10-17", "09:00", "2015-10-16", "14:30", false)  // 10/17
+    verifyTrigger(z, "2015-10-17", "18:00", "2015-10-16", "14:30", false)  // 10/17
+  }
+
+//////////////////////////////////////////////////////////////////////////
+// Util
+//////////////////////////////////////////////////////////////////////////
 
   private Void verifySchedule(Str str, CronSchedule s, Bool roundtrip := true)
   {
