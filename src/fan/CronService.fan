@@ -31,8 +31,14 @@ const class CronService : Service
 // Jobs
 //////////////////////////////////////////////////////////////////////////
 
+  ** List current jobs.
+  CronJob[] jobs()
+  {
+    actor.send(CronMsg("list")).get(5sec)
+  }
+
   ** Add a CronJob to this CronService.
-  This addJob(Str name, CronJob job)
+  This addJob(CronJob job)
   {
     actor.send(CronMsg("add", job)).get(5sec)
     return this
@@ -47,11 +53,13 @@ const class CronService : Service
 
   private Obj? actorReceive(CronMsg msg)
   {
+    cx := Actor.locals["cx"] as CronCx
     switch (msg.op)
     {
       case "init":  return onInit
-      case "add":   return onAdd(msg.job)
-      case "check": return onCheck
+      case "list":  return cx.jobs.toImmutable
+      case "add":   return onAdd(cx, msg.job)
+      case "check": return onCheck(cx)
       default: throw ArgErr("Unknown op: $msg.op")
     }
   }
@@ -59,24 +67,25 @@ const class CronService : Service
   ** Init service.
   private Obj? onInit()
   {
+    Actor.locals["cx"] = CronCx()
     actor.sendLater(checkFreq, checkMsg)
     log.info("CronService started")
     return null
   }
 
   ** Add a new job.
-  private Obj? onAdd(CronJob job)
+  private Obj? onAdd(CronCx cx, CronJob job)
   {
-    echo("TODO: add")
+    echo("TODO: add $job")
     return null
   }
 
   ** Check if any jobs need to run.
-  private Obj? onCheck()
+  private Obj? onCheck(CronCx cx)
   {
     try
     {
-      echo("TODO: check")
+      x := 5 //echo("TODO: check")
     }
     catch (Err err) { log.err("Check failed", err) }
     finally { actor.sendLater(checkFreq, checkMsg) }
@@ -97,7 +106,7 @@ internal const class CronMsg
 {
   new make(Str op, CronJob? job := null)
   {
-    this.op = op
+    this.op  = op
     this.job = job
   }
   const Str op
