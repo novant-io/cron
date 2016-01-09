@@ -22,9 +22,9 @@ internal class CronTest : Test
     verifyEq(cron.jobs.size, 0)
 
     // add jobs
-    cron.addJob(CronJob("test-a", JobTest#jobA, CronSchedule("every 5sec")))
-    cron.addJob(CronJob("test-b", JobTest#jobB, CronSchedule("every 8sec")))
-    cron.addJob(CronJob("test-c", JobTest#jobC, CronSchedule("daily at " + (Time.now + 10sec).toLocale("hh:mm"))))
+    cron.addJob("test-a", JobTest#jobA, CronSchedule("every 5sec"))
+    cron.addJob("test-b", JobTest#jobB, CronSchedule("every 8sec"))
+    cron.addJob("test-c", JobTest#jobC, CronSchedule("daily at " + (Time.now + 10sec).toLocale("hh:mm")))
     Actor.sleep(21sec)
 
     // verify results

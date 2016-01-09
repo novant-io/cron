@@ -11,7 +11,7 @@ using concurrent
 **
 ** CronJobActor runs a job in an Actor.
 **
-const class CronJobActor : Actor
+internal const class CronJobActor : Actor
 {
   ** It-block constructor.
   new make(ActorPool pool, CronJob job) : super(pool)

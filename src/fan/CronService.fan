@@ -48,9 +48,9 @@ const class CronService : Service
   }
 
   ** Add a CronJob to this CronService.
-  This addJob(CronJob job)
+  This addJob(Str name, Method method, CronSchedule schedule)
   {
-    actor.send(CronMsg("add", job)).get(5sec)
+    actor.send(CronMsg("add", CronJob(name, method, schedule))).get(5sec)
     return this
   }
 
