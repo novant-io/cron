@@ -47,10 +47,17 @@ const class CronService : Service
     actor.send(CronMsg("list")).get(5sec)
   }
 
-  ** Add a CronJob to this CronService.
+  ** Add a CronJob to this service.
   This addJob(Str name, Method method, CronSchedule schedule)
   {
     actor.send(CronMsg("add", CronJob(name, method, schedule))).get(5sec)
+    return this
+  }
+
+  ** Remove given job from service.
+  This removeJob(Str name)
+  {
+    actor.send(CronMsg("remove", name)).get(5sec)
     return this
   }
 
@@ -68,10 +75,11 @@ const class CronService : Service
     cx := Actor.locals["cx"] as CronCx
     switch (msg.op)
     {
-      case "init":  return onInit
-      case "list":  return cx.jobs.toImmutable
-      case "add":   return onAdd(cx, msg.job)
-      case "check": return onCheck(cx)
+      case "init":   return onInit
+      case "list":   return cx.jobs.toImmutable
+      case "add":    return onAdd(cx, msg.a)
+      case "remove": return onRemove(cx, msg.a)
+      case "check":  return onCheck(cx)
       default: throw ArgErr("Unknown op: $msg.op")
     }
   }
@@ -88,8 +96,21 @@ const class CronService : Service
   ** Add a new job.
   private Obj? onAdd(CronCx cx, CronJob job)
   {
+    if (cx.jobs.contains(job)) throw Err("Job already exists: $job.name")
     cx.jobs.add(job)
     log.info("job added: $job")
+    return null
+  }
+
+  ** Remove a job.
+  private Obj? onRemove(CronCx cx, Str name)
+  {
+    job := cx.jobs.find |j| { j.name == name }
+    if (job != null)
+    {
+      cx.jobs.remove(job)
+      log.info("job removed: $job")
+    }
     return null
   }
 
@@ -125,11 +146,14 @@ const class CronService : Service
 
 internal const class CronMsg
 {
-  new make(Str op, CronJob? job := null)
+  new make(Str op, Obj? a := null, Obj? b := null)
   {
-    this.op  = op
-    this.job = job
+    this.op = op
+    this.a  = a
+    this.b  = b
   }
   const Str op
-  const CronJob? job
+  const Obj? a
+  const Obj? b
+
 }

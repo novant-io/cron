@@ -22,14 +22,29 @@ internal class CronTest : Test
     verifyEq(cron.jobs.size, 0)
 
     // add jobs
-    cron.addJob("test-a", JobTest#jobA, CronSchedule("every 5sec"))
-    cron.addJob("test-b", JobTest#jobB, CronSchedule("every 8sec"))
+    cron.addJob("test-a", JobTest#jobA, CronSchedule("every 1sec"))
+    cron.addJob("test-b", JobTest#jobB, CronSchedule("every 5sec"))
     cron.addJob("test-c", JobTest#jobC, CronSchedule("daily at " + (Time.now + 10sec).toLocale("hh:mm")))
-    Actor.sleep(21sec)
 
-    // verify results
-    verifyEq(JobTest.a.val, 4)
+    // test dup name
+    verifyErr(Err#) { cron.addJob("test-a", JobTest#jobC, CronSchedule("every 2sec")) }
+    verifyEq(cron.jobs.size, 3)
+
+    // wait 15sec and check vals
+    Actor.sleep(15100ms)
+    verifyEq(JobTest.a.val, 15)
     verifyEq(JobTest.b.val, 3)
+    verifyEq(JobTest.c.val, 1)
+
+    // remove job-a
+    cron.removeJob("not-exist")
+    cron.removeJob("test-a")
+    verifyEq(cron.jobs.size, 2)
+
+    // wait another 5sec and check vals
+    Actor.sleep(5100ms)
+    verifyEq(JobTest.a.val, 15)
+    verifyEq(JobTest.b.val, 4)
     verifyEq(JobTest.c.val, 1)
 
     cron.stop
