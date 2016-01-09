@@ -96,7 +96,7 @@ internal const class EverySchedule : CronSchedule
 
   override Bool trigger(DateTime now, DateTime? last)
   {
-    last==null ? false : now - last >= dur
+    last==null ? true : now - last >= dur
   }
 
   override Int hash() { toStr.hash }

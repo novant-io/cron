@@ -31,7 +31,7 @@ internal class ScheduleTest : Test
 
     now := DateTime.now
     x := CronSchedule("every 10min")
-    verifyFalse(x.trigger(now, null))
+    verify(x.trigger(now, null))
     verifyFalse(x.trigger(now, now-1min))
     verifyFalse(x.trigger(now, now-9min))
     verify(x.trigger(now, now-10min))

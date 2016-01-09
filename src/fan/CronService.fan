@@ -19,13 +19,23 @@ const class CronService : Service
 //////////////////////////////////////////////////////////////////////////
 
   ** Constructor.
-  new make()
+  new make(|This|? f := null)
   {
-    actor.send(CronMsg("init"))
+    if (f != null) f(this)
   }
 
   ** Directory for job config and logs.
   const File dir := Env.cur.workDir + `cron/`
+
+  ** Start service.
+  override Void onStart() { actor.send(CronMsg("init")) }
+
+  ** Stop service will block until all jobs are complete.
+  override Void onStop()
+  {
+    actor.pool.stop.join
+    jobPool.stop.join
+  }
 
 //////////////////////////////////////////////////////////////////////////
 // Jobs
@@ -50,6 +60,8 @@ const class CronService : Service
 
   private const Actor actor := Actor(ActorPool { name="CronService" })
     |msg| { actorReceive(msg) }
+
+  private const ActorPool jobPool := ActorPool { name="CronService-Jobs" }
 
   private Obj? actorReceive(CronMsg msg)
   {
@@ -76,7 +88,8 @@ const class CronService : Service
   ** Add a new job.
   private Obj? onAdd(CronCx cx, CronJob job)
   {
-    echo("TODO: add $job")
+    cx.jobs.add(job)
+    log.info("job added: $job")
     return null
   }
 
@@ -85,9 +98,17 @@ const class CronService : Service
   {
     try
     {
-      x := 5 //echo("TODO: check")
+      now := DateTime.now
+      cx.jobs.each |job|
+      {
+        if (job.schedule.trigger(now, cx.lastRun[job]))
+        {
+          cx.lastRun[job] = now
+          CronJobActor(jobPool, job).send(null)
+        }
+      }
     }
-    catch (Err err) { log.err("Check failed", err) }
+    catch (Err err) { log.debug("Check failed", err) }
     finally { actor.sendLater(checkFreq, checkMsg) }
     return null
   }

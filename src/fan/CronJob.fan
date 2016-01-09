@@ -12,16 +12,30 @@
 const class CronJob
 {
   ** It-block constructor.
-  new make(|This| f) { f(this) }
+  new make(Str name, Method m, CronSchedule s)
+  {
+    this.name = name
+    this.method = m
+    this.schedule = s
+  }
 
   ** Job name.
   const Str name
 
   ** Method to invoke for job.
-  const Method func
+  const Method method
 
   ** Job schedule.
   const CronSchedule schedule
 
-  override Str toStr() { "$name.toCode -> $func @ $schedule" }
+  ** Hash is 'name.hash'
+  override Int hash() { name.hash }
+
+  ** CronJobs are equal if 'name' is equal.
+  override Bool equals(Obj? that)
+  {
+    that is CronJob ? ((CronJob)that).name == name : false
+  }
+
+  override Str toStr() { "$name.toCode -> $method @ $schedule" }
 }

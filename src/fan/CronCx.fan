@@ -11,5 +11,9 @@
 **
 internal class CronCx
 {
+  ** Job list.
   CronJob[] jobs := [,]
+
+  ** Last run map.
+  CronJob:DateTime lastRun := [:]
 }
