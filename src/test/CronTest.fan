@@ -15,7 +15,11 @@ internal class CronTest : Test
 {
   Void testBasics()
   {
-    cron := CronService()
+    cron := CronService
+    {
+      it.dir = tempDir + `cron/`
+      // it.logLimit = 5
+    }
     cron.start
 
     // test empty
@@ -46,6 +50,20 @@ internal class CronTest : Test
     Actor.sleep(5100ms)
     verifyEq(JobTest.a.val, 15)
     verifyEq(JobTest.b.val, 4)
+    verifyEq(JobTest.c.val, 1)
+
+    // stop service
+    cron.stop
+
+    // restart and check runTimes
+    cron = CronService()
+    cron.start
+    verifyEq(JobTest.c.val, 1)
+    verifyEq(cron.jobs.size, 0)
+    cron.addJob("testd", JobTest#jobC, CronSchedule("daily at " + (Time.now + 5sec).toLocale("hh:mm")))
+    verifyEq(cron.jobs.size, 1)
+    verifyNotNull(cron.jobs.first["lastRun"])
+    Actor.sleep(6sec)
     verifyEq(JobTest.c.val, 1)
 
     cron.stop

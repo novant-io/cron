@@ -113,7 +113,19 @@ const class CronService : Service
   private Obj? onAdd(CronCx cx, CronJob job)
   {
     if (cx.jobs.contains(job)) throw Err("Job already exists: $job.name")
+
+    // add job
     cx.jobs.add(job)
+
+    // look up job.props
+    props := dir + `$job.name/${job.name}.props`
+    if (props.exists)
+    {
+      map := props.readProps
+      ts  := DateTime.fromStr(map["lastRun"] ?: "", false)
+      cx.lastRun[job] = ts
+    }
+
     log.info("job added: $job")
     return null
   }
@@ -154,6 +166,20 @@ const class CronService : Service
 
   private const Duration checkFreq := 1sec
   private const CronMsg checkMsg := CronMsg("check")
+}
+
+**************************************************************************
+** CronCx
+**************************************************************************
+
+** CronCx manages the runtime state of cron jobs inside CronService.
+internal class CronCx
+{
+  ** Job list.
+  CronJob[] jobs := [,]
+
+  ** Last run map.
+  CronJob:DateTime lastRun := [:]
 }
 
 **************************************************************************
