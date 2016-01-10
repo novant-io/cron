@@ -27,6 +27,9 @@ const class CronService : Service
   ** Directory for job config and logs.
   const File dir := Env.cur.workDir + `cron/`
 
+  ** Number of logs to keep per job.
+  const Int jobLogLimit := 30
+
   ** Start service.
   override Void onStart() { actor.send(CronMsg("init")) }
 
@@ -80,6 +83,7 @@ const class CronService : Service
       case "add":    return onAdd(cx, msg.a)
       case "remove": return onRemove(cx, msg.a)
       case "check":  return onCheck(cx)
+      case "clean":  return onClean(cx)
       default: throw ArgErr("Unknown op: $msg.op")
     }
   }
@@ -89,6 +93,7 @@ const class CronService : Service
   {
     Actor.locals["cx"] = CronCx()
     actor.sendLater(checkFreq, checkMsg)
+    actor.sendLater(cleanFreq, cleanMsg)
     log.info("CronService started")
     return null
   }
@@ -162,10 +167,31 @@ const class CronService : Service
     return null
   }
 
+  private Obj? onClean(CronCx cx)
+  {
+    try
+    {
+      cx.jobs.each |job|
+      {
+        logs := (dir + `$job.name/`).listFiles.findAll |f| { f.ext == "log" }
+        if (logs.size > jobLogLimit)
+        {
+          logs.sort |a,b| { a.modified <=> b.modified }
+          logs.eachRange(0..<(logs.size-jobLogLimit)) |f| { f.delete }
+        }
+      }
+    }
+    catch (Err err) { log.err("Clean failed", err) }
+    finally { actor.sendLater(cleanFreq, cleanMsg) }
+    return null
+  }
+
   private const Log log := Log.get("cron")
 
   private const Duration checkFreq := 1sec
+  private const Duration cleanFreq := 1hr
   private const CronMsg checkMsg := CronMsg("check")
+  private const CronMsg cleanMsg := CronMsg("clean")
 }
 
 **************************************************************************
