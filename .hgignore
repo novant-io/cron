@@ -2,4 +2,5 @@ syntax glob
 
 fan.props
 .DS_Store
+cron/
 lib/

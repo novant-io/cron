@@ -9,7 +9,7 @@
 **
 ** CronJob
 **
-const class CronJob
+internal const class CronJob
 {
   ** It-block constructor.
   new make(Str name, Method m, CronSchedule s)

@@ -42,7 +42,7 @@ const class CronService : Service
 //////////////////////////////////////////////////////////////////////////
 
   ** List current jobs.
-  CronJob[] jobs()
+  [Str:Obj?][] jobs()
   {
     actor.send(CronMsg("list")).get(5sec)
   }
@@ -76,7 +76,7 @@ const class CronService : Service
     switch (msg.op)
     {
       case "init":   return onInit
-      case "list":   return cx.jobs.toImmutable
+      case "list":   return onList(cx)
       case "add":    return onAdd(cx, msg.a)
       case "remove": return onRemove(cx, msg.a)
       case "check":  return onCheck(cx)
@@ -91,6 +91,22 @@ const class CronService : Service
     actor.sendLater(checkFreq, checkMsg)
     log.info("CronService started")
     return null
+  }
+
+  ** List jobs and state.
+  private Obj? onList(CronCx cx)
+  {
+    list := Obj[,]
+    cx.jobs.each |job|
+    {
+      map := Str:Obj?[:] { ordered=true }
+      map["name"]     = job.name
+      map["method"]   = job.method
+      map["schedule"] = job.schedule
+      map["lastRun"]  = cx.lastRun[job]
+      list.add(map.toImmutable)
+    }
+    return list.toImmutable
   }
 
   ** Add a new job.

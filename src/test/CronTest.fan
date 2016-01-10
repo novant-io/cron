@@ -27,7 +27,7 @@ internal class CronTest : Test
     cron.addJob("testc", JobTest#jobC, CronSchedule("daily at " + (Time.now + 10sec).toLocale("hh:mm")))
 
     // test dup name
-    verifyErr(Err#) { cron.addJob("test-a", JobTest#jobC, CronSchedule("every 2sec")) }
+    verifyErr(Err#) { cron.addJob("testa", JobTest#jobC, CronSchedule("every 2sec")) }
     verifyEq(cron.jobs.size, 3)
 
     // wait 15sec and check vals
@@ -38,7 +38,7 @@ internal class CronTest : Test
 
     // remove job-a
     cron.removeJob("not-exist")
-    cron.removeJob("test-a")
+    cron.removeJob("testa")
     verifyEq(cron.jobs.size, 2)
 
     // wait another 5sec and check vals
