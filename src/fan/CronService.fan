@@ -125,11 +125,11 @@ const class CronService : Service
         if (job.schedule.trigger(now, cx.lastRun[job]))
         {
           cx.lastRun[job] = now
-          CronJobActor(jobPool, job).send(null)
+          CronJobActor(jobPool, this, job, now).send(null)
         }
       }
     }
-    catch (Err err) { log.debug("Check failed", err) }
+    catch (Err err) { log.err("Check failed", err) }
     finally { actor.sendLater(checkFreq, checkMsg) }
     return null
   }
@@ -155,5 +155,4 @@ internal const class CronMsg
   const Str op
   const Obj? a
   const Obj? b
-
 }
