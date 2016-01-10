@@ -38,6 +38,12 @@ internal const class CronJobActor : Actor
       dir := service.dir + `$job.name/`
       dir.create
 
+      // props file
+      props := dir + `${job.name}.props`
+      map   := Str:Str[:] { ordered=true }
+      map["name"]    = job.name
+      map["lastRun"] = ts.toStr
+
       // create log
       key := ts.toLocale("YYMMDD-hhmm")
       log := CronJobLog(dir + `${job.name}-${key}.log`)
@@ -48,16 +54,19 @@ internal const class CronJobActor : Actor
         // invoke job
         instance := job.method.isStatic ? null : job.method.parent.make
         job.method.callOn(instance, [log])
-
-        // update sucess
         log.info("Job completed")
       }
       catch (Err jobErr)
       {
-        // update fail
+        // log err
         log.err("*** JOB FAILED ***", jobErr)
+        map["lastErr"] = jobErr.traceToStr
       }
-      finally { log.file.out(true).sync }
+      finally
+      {
+        props.out.writeProps(map).flush.close // sync throws IOErr on OSX?
+        log.file.out(true).sync.close
+      }
     }
     catch (Err err)
     {
@@ -87,6 +96,9 @@ internal const class CronJobLog : Log
   override Void log(LogRec rec)
   {
     // TODO FIXIT: don't open/close stream?
-    file.out(true).printLine(rec).close
+    out := file.out(true)
+    out.printLine(rec)
+    if (rec.err != null) out.printLine(rec.err.traceToStr)
+    out.flush.close
   }
 }

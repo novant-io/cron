@@ -25,10 +25,11 @@ internal class CronTest : Test
     cron.addJob("testa", JobTest#jobA, CronSchedule("every 1sec"))
     cron.addJob("testb", JobTest#jobB, CronSchedule("every 5sec"))
     cron.addJob("testc", JobTest#jobC, CronSchedule("daily at " + (Time.now + 10sec).toLocale("hh:mm")))
+    cron.addJob("testd", JobTest#jobD, CronSchedule("daily at " + (Time.now + 12sec).toLocale("hh:mm")))
 
     // test dup name
     verifyErr(Err#) { cron.addJob("testa", JobTest#jobC, CronSchedule("every 2sec")) }
-    verifyEq(cron.jobs.size, 3)
+    verifyEq(cron.jobs.size, 4)
 
     // wait 15sec and check vals
     Actor.sleep(15100ms)
@@ -39,7 +40,7 @@ internal class CronTest : Test
     // remove job-a
     cron.removeJob("not-exist")
     cron.removeJob("testa")
-    verifyEq(cron.jobs.size, 2)
+    verifyEq(cron.jobs.size, 3)
 
     // wait another 5sec and check vals
     Actor.sleep(5100ms)
@@ -56,6 +57,7 @@ internal class JobTest
   Void jobA() { echo("# jobA [$a.incrementAndGet]") }
   static Void jobB() { echo("# jobB [$b.incrementAndGet]") }
   Void jobC(Log log) { log.info("# jobC [$c.incrementAndGet]") }
+  static Void jobD() { throw Err("Oops") }
 
   static const AtomicInt a := AtomicInt(0)
   static const AtomicInt b := AtomicInt(0)
