@@ -62,6 +62,7 @@ internal class ScheduleTest : Test
     verifyTrigger(x, "2014-09-10", "09:00", "2014-09-09", "16:00", false)   // before
     verifyTrigger(x, "2014-09-10", "15:59", "2014-09-09", "16:00", false)   // before
     verifyTrigger(x, "2014-09-10", "16:00", "2014-09-09", "16:00", true)    // exact
+    verifyTrigger(x, "2014-09-10", "18:00", "2014-09-09", "19:00", true)    // after
     verifyTrigger(x, "2014-09-10", "18:00", "2014-09-10", "16:00", false)   // after
     verifyTrigger(x, "2014-09-11", "09:00", "2014-09-10", "16:00", false)   // next-day before
     verifyTrigger(x, "2014-09-11", "15:59", "2014-09-10", "16:00", false)   // next-day before

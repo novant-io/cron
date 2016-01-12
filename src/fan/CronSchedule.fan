@@ -122,9 +122,12 @@ internal const class DailySchedule : CronSchedule
 
   override Bool trigger(DateTime now, DateTime? last)
   {
-    last==null
-      ? now.time >= time
-      : (now.time >= time && (now-last >= 24hr))
+    if (now.time >= time)
+    {
+      if (last == null) return true
+      if (now.date > last.date) return true
+    }
+    return false
   }
 
   override Int hash() { toStr.hash }
