@@ -14,3 +14,19 @@ A job scheduling API for Fantom:
 
     // stop service
     cron.stop
+
+    ...
+
+    class JobA
+    {
+      // no-arg job function
+      Void run() { ... }
+    }
+
+    class JobB
+    {
+      // optionally take a job specific Log instance for logging
+      Void run(Log log) { ... }
+    }
+
+
