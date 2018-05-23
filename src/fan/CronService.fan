@@ -75,10 +75,13 @@ const class CronService : Service
 
   private Obj? actorReceive(CronMsg msg)
   {
+    if (msg.op == "init") return onInit
+
     cx := Actor.locals["cx"] as CronCx
+    if (cx == null) throw IOErr("CronService not started -- call start() first")
+
     switch (msg.op)
     {
-      case "init":   return onInit
       case "list":   return onList(cx)
       case "add":    return onAdd(cx, msg.a)
       case "remove": return onRemove(cx, msg.a)
