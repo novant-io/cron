@@ -30,3 +30,10 @@ class JobB
   Void run(Log log) { ... }
 }
 ```
+
+## Schedule Format
+
+    every 10sec
+    daily at 15:00
+    weekly on sun at 10:00
+    monthly on 1,15 at 10:00

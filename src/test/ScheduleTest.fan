@@ -14,7 +14,7 @@ internal class ScheduleTest : Test
   // every 10sec
   // daily at 10:00
   // weekly on sun at 10:00
-  // montly on 1,15 at 10:00
+  // monthly on 1,15 at 10:00
 
 //////////////////////////////////////////////////////////////////////////
 // Every
