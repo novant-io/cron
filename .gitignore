@@ -1,5 +1,5 @@
 fan.props
 .DS_Store
-cron/
-lib/
-temp/
+/cron/
+/lib/
+/temp/
