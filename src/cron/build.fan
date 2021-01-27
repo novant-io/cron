@@ -18,7 +18,7 @@ class Build : BuildPod
   {
     podName = "cron"
     summary = "Cron Scheduling API"
-    version = Version("1.0")
+    version = Version("1.1")
     meta = [
       "org.name":     "Novant",
       "org.uri":      "https://novant.io/",
