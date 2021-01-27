@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014, Andy Frank
+// Copyright (c) 2014, Novant LLC
 // Licensed under the MIT License
 //
 // History:
