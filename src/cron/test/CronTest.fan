@@ -68,6 +68,27 @@ internal class CronTest : Test
 
     cron.stop
   }
+
+  Void testAddSchedule()
+  {
+    cron := CronService
+    {
+      it.dir = tempDir + `cron/`
+      it.jobLogLimit = 5
+    }
+    cron.start
+
+    // test empty
+    verifyEq(cron.jobs.size, 0)
+
+    // add jobs
+    cron.addJob("testa", JobTest#jobA, CronSchedule("every 30sec"))
+    cron.addJob("testb", JobTest#jobB, "every 45sec")
+    verifyEq(cron.jobs.size, 2)
+
+    // bad arg
+    verifyErr(ArgErr#) { cron.addJob("err", JobTest#jobC, 15) }
+  }
 }
 
 internal class JobTest

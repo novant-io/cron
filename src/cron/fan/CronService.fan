@@ -51,9 +51,15 @@ const class CronService : Service
   }
 
   ** Add a CronJob to this service.
-  This addJob(Str name, Method method, CronSchedule schedule)
+  This addJob(Str name, Method method, Obj schedule)
   {
-    actor.send(CronMsg("add", CronJob(name, method, schedule))).get(5sec)
+    // allow "unwrapped" schedule string
+    CronSchedule? s
+    try  { s = schedule as CronSchedule ?: CronSchedule(schedule) }
+    catch (Err err) throw ArgErr("Invalid scheulde arg '$schedule'")
+
+    // queue add job message
+    actor.send(CronMsg("add", CronJob(name, method, s))).get(5sec)
     return this
   }
 
