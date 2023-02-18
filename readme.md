@@ -37,3 +37,7 @@ class JobB
     daily at 15:00
     weekly on sun at 10:00
     monthly on 1,15 at 10:00
+
+## API
+
+See full [API](http://eggbox.fantomfactory.org/pods/cron/api) on Eggbox.
